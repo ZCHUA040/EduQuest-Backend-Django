@@ -256,31 +256,6 @@ class EduquestUserViewSet(viewsets.ModelViewSet):
             "longest_streak": user.daily_checkin_longest_streak,
             "total_points": float(user.total_points),
         })
-<<<<<<< HEAD
-=======
-    
-    @action(detail=False, methods=['post'], url_path='calendar-daily-check-in')
-    def calendar_daily_check_in(self, request):
-        user = request.user
-        if not isinstance(user, EduquestUser):
-            return Response({"detail": "Invalid user context"}, status=status.HTTP_400_BAD_REQUEST)
-
-        dates = list(UserDailyCheckin.objects.filter(student=user).order_by('checkin_date').values_list('checkin_date', flat=True))
-        dates_iso = [d.isoformat() for d in dates]
-        return Response({"checkin_dates": dates_iso})
-    
-    @action(detail=False, methods=['post'], url_path='update-daily-goals')
-    def update_daily_goals(self, request):
-        user = request.user
-        if not isinstance(user, EduquestUser):
-            return Response({"detail": "Invalid user context"}, status=status.HTTP_400_BAD_REQUEST)
-
-        daily_goals = request.data.get('daily_goals')
-        user.daily_goals = daily_goals
-        user.save(update_fields=['daily_goals'])
-
-        return Response({"detail": "Daily goals updated successfully"}, status=status.HTTP_200_OK)
->>>>>>> parent of d9ec409 (Update daily goals when collecting points)
 
 class AcademicYearViewSet(viewsets.ModelViewSet):
     queryset = AcademicYear.objects.all().order_by('-id')
