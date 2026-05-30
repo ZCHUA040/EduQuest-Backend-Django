@@ -86,9 +86,7 @@ def calculate_score_and_issue_points(user_quest_attempt_id):
             if total_score_achieved > highest_score_achieved and instance.quest.type != 'Private':
                 points_to_add = total_score_achieved - highest_score_achieved
                 instance.student.total_points += points_to_add
-                instance.student.current_points += points_to_add
-
-                instance.student.save(update_fields=['total_points', 'current_points'])
+                instance.student.save(update_fields=['total_points'])
                 return f"[Update User Points] User {instance.student.username} earned {points_to_add} points for quest attempt {instance.id}"
 
             return f"[Update User Points] User {instance.student.username} did not earn any points for quest attempt {instance.id}"
