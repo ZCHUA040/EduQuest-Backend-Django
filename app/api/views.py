@@ -757,7 +757,6 @@ class UserQuestAttemptViewSet(viewsets.ModelViewSet):
 
         user.total_points += bonus_points
         user.save(update_fields=['total_points'])
-
         return Response({
             "bonus_awarded": True,
             "bonus_points": bonus_points
