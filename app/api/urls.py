@@ -16,7 +16,6 @@ from .views import (
     UserQuestBadgeViewSet,
     UserCourseBadgeViewSet,
     DocumentViewSet,
-    CosmeticViewSet,
     StudentFeedbackViewSet,
     AnalyticsPartOneView,
     AnalyticsPartTwoView,
@@ -49,7 +48,6 @@ router.register(r'badges', BadgeViewSet, basename='badges')
 router.register(r'user-quest-badges', UserQuestBadgeViewSet, basename='user-quest-badges')
 router.register(r'user-course-badges', UserCourseBadgeViewSet, basename='user-course-badges')
 router.register(r'documents', DocumentViewSet, basename='documents')
-router.register(r'cosmetics', CosmeticViewSet, basename='cosmetics')
 router.register(r'student-feedback', StudentFeedbackViewSet, basename='student-feedback')
 
 

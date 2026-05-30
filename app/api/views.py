@@ -37,10 +37,8 @@ from .models import (
     UserQuestBadge,
     UserCourseBadge,
     Document,
-    Cosmetic,
     StudentFeedback,
-    StudentAttendanceOverride,
-    UserDailyCheckin
+    StudentAttendanceOverride
 )
 from .serializers import (
     EduquestUserSerializer,
@@ -59,9 +57,7 @@ from .serializers import (
     UserQuestBadgeSerializer,
     UserCourseBadgeSerializer,
     DocumentSerializer,
-    CosmeticSerializer,
-    StudentFeedbackSerializer,
-    UserDailyCheckinSerializer
+    StudentFeedbackSerializer
 )
 from rest_framework.decorators import api_view
 from django.utils.decorators import method_decorator
@@ -227,7 +223,6 @@ class EduquestUserViewSet(viewsets.ModelViewSet):
                 "current_streak": user.daily_checkin_streak,
                 "longest_streak": user.daily_checkin_longest_streak,
                 "total_points": float(user.total_points),
-                "current_points": float(user.current_points),
             })
 
         yesterday = today - timedelta(days=1)
@@ -245,26 +240,12 @@ class EduquestUserViewSet(viewsets.ModelViewSet):
             user.daily_checkin_streak = next_streak
             user.daily_checkin_longest_streak = max(user.daily_checkin_longest_streak, next_streak)
             user.total_points += points_awarded
-            user.current_points += points_awarded
-
-            # Reset daily goals
-            try:
-                for goals in user.daily_goals:
-                    goals['complete'] = 0
-            except:
-                pass
-
             user.save(update_fields=[
                 'daily_checkin_last_date',
                 'daily_checkin_streak',
                 'daily_checkin_longest_streak',
                 'total_points',
-                'current_points',
-                'daily_goals'
             ])
-            # Create a record in UserDailyCheckin to track all check-in dates
-            UserDailyCheckin.objects.get_or_create(student=user, checkin_date=today)
-            
 
         return Response({
             "checked_in": True,
@@ -274,49 +255,7 @@ class EduquestUserViewSet(viewsets.ModelViewSet):
             "current_streak": user.daily_checkin_streak,
             "longest_streak": user.daily_checkin_longest_streak,
             "total_points": float(user.total_points),
-            "current_points": float(user.current_points),
         })
-    
-    @action(detail=False, methods=['post'], url_path='calendar-daily-check-in')
-    def calendar_daily_check_in(self, request):
-        user = request.user
-        if not isinstance(user, EduquestUser):
-            return Response({"detail": "Invalid user context"}, status=status.HTTP_400_BAD_REQUEST)
-
-        dates = list(UserDailyCheckin.objects.filter(student=user).order_by('checkin_date').values_list('checkin_date', flat=True))
-        dates_iso = [d.isoformat() for d in dates]
-        return Response({"checkin_dates": dates_iso})
-    
-    @action(detail=False, methods=['post'], url_path='update-daily-goals')
-    def update_daily_goals(self, request):
-        user = request.user
-        if not isinstance(user, EduquestUser):
-            return Response({"detail": "Invalid user context"}, status=status.HTTP_400_BAD_REQUEST)
-
-        daily_goals = request.data.get('daily_goals')
-        if daily_goals is not None:
-            with transaction.atomic():
-                user = EduquestUser.objects.select_for_update().get(pk=user.pk)
-                current_goals_by_id = {
-                    goal.get('id'): goal
-                    for goal in user.daily_goals or []
-                    if goal.get('id') is not None
-                }
-                merged_goals = []
-                for goal in daily_goals:
-                    merged_goal = goal.copy()
-                    current_goal = current_goals_by_id.get(merged_goal.get('id'))
-                    if current_goal:
-                        merged_goal['complete'] = max(
-                            float(current_goal.get('complete') or 0),
-                            float(merged_goal.get('complete') or 0)
-                        )
-                    merged_goals.append(merged_goal)
-
-                user.daily_goals = merged_goals
-            user.save(update_fields=['daily_goals'])
-
-        return Response({"detail": "Daily goals updated successfully"}, status=status.HTTP_200_OK)
 
 class AcademicYearViewSet(viewsets.ModelViewSet):
     queryset = AcademicYear.objects.all().order_by('-id')
@@ -817,8 +756,7 @@ class UserQuestAttemptViewSet(viewsets.ModelViewSet):
         attempt.save(update_fields=['bonus_points', 'bonus_awarded'])
 
         user.total_points += bonus_points
-        user.current_points += bonus_points
-        user.save(update_fields=['total_points', 'current_points'])
+        user.save(update_fields=['total_points'])
 
         return Response({
             "bonus_awarded": True,
@@ -1032,15 +970,6 @@ class DocumentViewSet(viewsets.ModelViewSet):
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         except Exception as e:
             return Response({"Error uploading document": str(e)}, status=status.HTTP_400_BAD_REQUEST)
-
-
-class CosmeticViewSet(viewsets.ModelViewSet):
-    queryset = Cosmetic.objects.all().order_by('-id')
-    serializer_class = CosmeticSerializer
-    permission_classes = [IsAuthenticated]
-
-    def perform_create(self, serializer):
-        serializer.save(user=self.request.user)
 
 
 class AnalyticsPartOneView(APIView):
@@ -1562,7 +1491,6 @@ class StudentTutorialAttemptInsightsView(APIView):
                 'email': student.email,
                 'username': student.nickname or student.username,
                 'total_points': float(student.total_points),
-                'current_points': float(student.current_points),
                 'course_group_ids': sorted(enrolled_group_ids),
                 'tutorial_attempted': attempted,
                 'tutorial_total': total_quests,
@@ -1766,3 +1694,4 @@ class StudentAttendanceWorkbookExportView(APIView):
         )
         response['Content-Disposition'] = f'attachment; filename="{filename}"'
         return response
+
