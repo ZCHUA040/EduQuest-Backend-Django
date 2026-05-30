@@ -1,7 +1,7 @@
 services:
   app:
     build: .
-    image: rinroxy/eduquest-backend-django:latest
+    image: zchua040/eduquest-backend-django:latest
     ports:
       - "8000:8000"
     command: gunicorn core.wsgi:application -b 0.0.0.0:8000
@@ -27,7 +27,7 @@ services:
       - 8.8.4.4
 
   celery:
-    image: rinroxy/eduquest-backend-django:latest
+    image: zchua040/eduquest-backend-django:latest
     command: celery -A core worker --loglevel=info
     environment:
       - REDIS_HOST=redis
@@ -51,7 +51,7 @@ services:
       - 8.8.4.4
 
   celery-beat:
-    image: rinroxy/eduquest-backend-django:latest
+    image: zchua040/eduquest-backend-django:latest
     command: celery -A core beat --loglevel=info
     environment:
       - REDIS_HOST=redis

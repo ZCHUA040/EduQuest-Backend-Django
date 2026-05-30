@@ -15,8 +15,7 @@ from .models import (
     Badge,
     UserQuestBadge,
     UserCourseBadge,
-    Document,
-    Cosmetic
+    Document
 )
 
 
@@ -37,5 +36,5 @@ admin.site.register(UserQuestBadge)
 admin.site.register(UserCourseBadge)
 admin.site.register(Image)
 admin.site.register(Document)
-admin.site.register(Cosmetic)
+
 

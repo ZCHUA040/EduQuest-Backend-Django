@@ -1,5 +1,4 @@
 import logging
-import math
 from celery import shared_task
 from django.utils import timezone
 from django.db.models import Max, Q
@@ -18,8 +17,7 @@ def award_badge_points(user, badge_name):
     Add points when a badge is earned.
     """
     user.total_points += BADGE_POINTS
-    user.current_points += BADGE_POINTS
-    user.save(update_fields=['total_points', 'current_points'])
+    user.save(update_fields=['total_points'])
     logger.info("[Badge Points] Awarded %s points to %s for %s badge", BADGE_POINTS, user.username, badge_name)
 
 @shared_task
@@ -85,16 +83,16 @@ def calculate_score_and_issue_points(user_quest_attempt_id):
             )['max_score'] or 0
 
             # Update the user's total points if the new score is higher
-            if total_score_achieved > highest_score_achieved:
+            if total_score_achieved > highest_score_achieved and instance.quest.type != 'Private':
                 points_to_add = total_score_achieved - highest_score_achieved
                 instance.student.total_points += points_to_add
+<<<<<<< HEAD
+                instance.student.save(update_fields=['total_points'])
+=======
                 instance.student.current_points += points_to_add
 
-                for goals in instance.student.daily_goals:
-                    if goals['task'] == 2:
-                        goals['complete'] = goals['complete'] + points_to_add
-
-                instance.student.save(update_fields=['total_points', 'current_points', 'daily_goals'])
+                instance.student.save(update_fields=['total_points', 'current_points'])
+>>>>>>> parent of d9ec409 (Update daily goals when collecting points)
                 return f"[Update User Points] User {instance.student.username} earned {points_to_add} points for quest attempt {instance.id}"
 
             return f"[Update User Points] User {instance.student.username} did not earn any points for quest attempt {instance.id}"
@@ -624,3 +622,4 @@ def update_cognitive_profile(student_id):
 
     except Exception as e:
         print(f"[Error Updating Cognitive Profile]: {str(e)}")
+
